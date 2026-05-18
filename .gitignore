@@ -1,0 +1,33 @@
+# CDK outputs
+cdk.out/
+
+# Dependencies
+node_modules/
+
+# Build output (tsc)
+dist/
+*.js.map
+
+# Lambda bundles produced by NodejsFunction (CDK generates these)
+lambda/**/*.js
+lambda/**/*.d.ts
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# CDK context (auto-generated, but pin it if you override contexts)
+# cdk.context.json
