@@ -1,11 +1,11 @@
-# CDK outputs
-cdk.out/
+*.js
+!jest.config.js
+*.d.ts
+node_modules
 
-# Dependencies
-node_modules/
-
-**/*.js
-**/*.d.ts
+# CDK asset staging directory
+.cdk.staging
+cdk.out
 
 # IDE / OS
 .idea/
@@ -23,6 +23,3 @@ Thumbs.db
 
 # Test coverage
 coverage/
-
-# CDK context (auto-generated, but pin it if you override contexts)
-# cdk.context.json
