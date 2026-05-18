@@ -3,12 +3,7 @@
     "target": "ES2020",
     "module": "commonjs",
     "lib": ["ES2020"],
-    "declaration": true,
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": true,
@@ -16,9 +11,7 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
-    "outDir": "./dist",
-    "typeRoots": ["./node_modules/@types"]
+    "strictPropertyInitialization": false
   },
-  "exclude": ["node_modules", "cdk.out", "dist", "lambda"]
+  "exclude": ["node_modules", "cdk.out", "lambda"]
 }

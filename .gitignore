@@ -4,13 +4,8 @@ cdk.out/
 # Dependencies
 node_modules/
 
-# Build output (tsc)
-dist/
-*.js.map
-
-# Lambda bundles produced by NodejsFunction (CDK generates these)
-lambda/**/*.js
-lambda/**/*.d.ts
+**/*.js
+**/*.d.ts
 
 # IDE / OS
 .idea/

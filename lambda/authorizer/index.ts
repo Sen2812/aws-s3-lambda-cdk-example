@@ -61,7 +61,7 @@ export const handler = async (
   const cookies = parseCookies(event.headers?.['Cookie'] ?? event.headers?.['cookie']);
   const sessionId = cookies['session_id'];
 
-  if (sessionId && sessionId.length > 0) {
+  if (sessionId) {
     console.log('Authorized — session_id present');
     return buildPolicy('Allow', event.methodArn, sessionId, {
       sessionId,

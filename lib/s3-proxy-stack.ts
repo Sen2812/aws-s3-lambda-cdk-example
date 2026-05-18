@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
@@ -34,16 +33,9 @@ export class S3ProxyStack extends cdk.Stack {
         ALLOWED_BUCKETS: fileBucket.bucketName,
       },
       bundling: {
-        // esbuild bundles @aws-sdk/* so no Lambda layer needed
-        minify: false,
         sourceMap: true,
       },
     });
-
-    // Grant the backend Lambda permission to read objects (allows
-    // existence checks before generating pre-signed URLs, though not
-    // strictly required for getSignedUrl itself).
-    fileBucket.grantRead(backendLambda);
 
     // ──────────────────────────────────────────
     // Lambda: authorizer — validates session_id cookie
@@ -55,8 +47,6 @@ export class S3ProxyStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(5),
       memorySize: 256,
       bundling: {
-        externalModules: [],
-        minify: false,
         sourceMap: true,
       },
     });
@@ -70,10 +60,6 @@ export class S3ProxyStack extends cdk.Stack {
       deployOptions: {
         stageName: 'prod',
         loggingLevel: apigateway.MethodLoggingLevel.INFO,
-      },
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
 
