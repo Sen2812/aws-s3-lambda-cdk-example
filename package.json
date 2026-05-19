@@ -7,6 +7,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
+    "prebuild": "npm run clean",
     "test": "jest",
     "cdk": "cdk",
     "synth": "cdk synth",

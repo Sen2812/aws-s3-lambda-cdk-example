@@ -5,22 +5,15 @@
     "moduleResolution": "NodeNext",
     "lib": ["es2022"],
     "declaration": true,
+    "outDir": "dist",
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
     "inlineSourceMap": true,
     "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
     "skipLibCheck": true,
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types"]
+    "types": ["node", "jest"]
   },
-  "exclude": ["node_modules", "cdk.out", "lambda"]
+  "exclude": ["node_modules", "cdk.out", "dist", "lambda"]
 }

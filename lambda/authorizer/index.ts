@@ -1,29 +1,29 @@
-import {
+import type {
   APIGatewayRequestAuthorizerEvent,
   APIGatewayAuthorizerResult,
-  PolicyDocument,
 } from 'aws-lambda';
 
 /**
- * Parse a Cookie header string and extract named values.
- * e.g. "session_id=abc; foo=bar" → { session_id: "abc", foo: "bar" }
+ * Extract session_id from the Cookie header.
+ * Returns the session_id value, or undefined if absent.
  */
-function parseCookies(header: string | undefined): Record<string, string> {
-  const map: Record<string, string> = {};
-  if (!header) return map;
+function getSessionId(event: APIGatewayRequestAuthorizerEvent): string | undefined {
+  const header = event.headers?.['Cookie'] ?? event.headers?.['cookie'];
+  if (!header) return undefined;
+
   for (const part of header.split(';')) {
-    const eqIdx = part.indexOf('=');
-    if (eqIdx === -1) continue;
-    const key = part.substring(0, eqIdx).trim();
-    const value = part.substring(eqIdx + 1).trim();
-    if (key) map[key] = value;
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.substring(0, eq).trim() === 'session_id') {
+      return part.substring(eq + 1).trim() || undefined;
+    }
   }
-  return map;
+  return undefined;
 }
 
 /**
- * Build the IAM policy response that API Gateway expects from a
- * REQUEST-type Lambda authorizer.
+ * Build the IAM policy document for the API Gateway authorizer response.
+ * Grants or denies execute-api:Invoke on the entire API.
  */
 function buildPolicy(
   effect: 'Allow' | 'Deny',
@@ -31,41 +31,32 @@ function buildPolicy(
   principalId: string,
   context?: Record<string, string | number | boolean>,
 ): APIGatewayAuthorizerResult {
-  // Convert the full methodArn to a wildcard resource:
-  // arn:aws:execute-api:region:account:api-id/stage/GET/resource
-  // → allow/deny the whole API (authorizer is scoped to one method anyway)
-  const resource = methodArn.split('/').slice(0, 2).join('/') + '/*';
-
-  const policyDocument: PolicyDocument = {
-    Version: '2012-10-17',
-    Statement: [
-      {
-        Action: 'execute-api:Invoke',
-        Effect: effect,
-        Resource: resource,
-      },
-    ],
-  };
+  // Wildcard: allow/deny the whole API (authorizer is per-method anyway)
+  const apiArn = methodArn.split('/').slice(0, 2).join('/') + '/*';
 
   return {
     principalId,
-    policyDocument,
     context,
+    policyDocument: {
+      Version: '2012-10-17',
+      Statement: [{
+        Action: 'execute-api:Invoke',
+        Effect: effect,
+        Resource: apiArn,
+      }],
+    },
   };
 }
 
-// ─── Handler ────────────────────────────────────────────────────────
+/** REQUEST-type Lambda authorizer — validates session_id cookie. */
 export const handler = async (
   event: APIGatewayRequestAuthorizerEvent,
 ): Promise<APIGatewayAuthorizerResult> => {
-  const cookies = parseCookies(event.headers?.['Cookie'] ?? event.headers?.['cookie']);
-  const sessionId = cookies['session_id'];
+  const sessionId = getSessionId(event);
 
   if (sessionId) {
     console.log('Authorized — session_id present');
-    return buildPolicy('Allow', event.methodArn, sessionId, {
-      sessionId,
-    });
+    return buildPolicy('Allow', event.methodArn, sessionId, { sessionId });
   }
 
   console.log('Denied — session_id missing from cookie');
