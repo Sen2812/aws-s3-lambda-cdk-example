@@ -1,9 +1,9 @@
-import * as cdk from 'aws-cdk-lib/core';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import { Construct } from 'constructs';
+import * as cdk from "aws-cdk-lib/core";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as nodejs from "aws-cdk-lib/aws-lambda-nodejs";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import { Construct } from "constructs";
 
 export class S3ProxyStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -12,7 +12,7 @@ export class S3ProxyStack extends cdk.Stack {
     // ──────────────────────────────────────────
     // S3 bucket — the file store
     // ──────────────────────────────────────────
-    const fileBucket = new s3.Bucket(this, 'FileBucket', {
+    const fileBucket = new s3.Bucket(this, "FileBucket", {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       encryption: s3.BucketEncryption.S3_MANAGED,
       enforceSSL: true,
@@ -23,9 +23,9 @@ export class S3ProxyStack extends cdk.Stack {
     // ──────────────────────────────────────────
     // Lambda: backend — generates pre-signed URL & returns 302
     // ──────────────────────────────────────────
-    const backendLambda = new nodejs.NodejsFunction(this, 'BackendLambda', {
-      entry: 'lambda/backend/index.ts',
-      handler: 'handler',
+    const backendLambda = new nodejs.NodejsFunction(this, "BackendLambda", {
+      entry: "lambda/backend/index.ts",
+      handler: "handler",
       runtime: lambda.Runtime.NODEJS_20_X,
       timeout: cdk.Duration.seconds(10),
       memorySize: 256,
@@ -40,66 +40,76 @@ export class S3ProxyStack extends cdk.Stack {
     // ──────────────────────────────────────────
     // Lambda: authorizer — validates session_id cookie
     // ──────────────────────────────────────────
-    const authorizerLambda = new nodejs.NodejsFunction(this, 'AuthorizerLambda', {
-      entry: 'lambda/authorizer/index.ts',
-      handler: 'handler',
-      runtime: lambda.Runtime.NODEJS_20_X,
-      timeout: cdk.Duration.seconds(5),
-      memorySize: 256,
-      bundling: {
-        sourceMap: true,
+    const authorizerLambda = new nodejs.NodejsFunction(
+      this,
+      "AuthorizerLambda",
+      {
+        entry: "lambda/authorizer/index.ts",
+        handler: "handler",
+        runtime: lambda.Runtime.NODEJS_20_X,
+        timeout: cdk.Duration.seconds(5),
+        memorySize: 256,
+        bundling: {
+          sourceMap: true,
+        },
       },
-    });
+    );
 
     // ──────────────────────────────────────────
     // API Gateway REST API
     // ──────────────────────────────────────────
-    const api = new apigateway.RestApi(this, 'S3ProxyApi', {
-      restApiName: 'S3 Proxy',
-      description: 'Proxies S3 object downloads through pre-signed URLs',
+    const api = new apigateway.RestApi(this, "S3ProxyApi", {
+      restApiName: "S3 Proxy",
+      description: "Proxies S3 object downloads through pre-signed URLs",
       deployOptions: {
-        stageName: 'prod',
+        stageName: "prod",
         loggingLevel: apigateway.MethodLoggingLevel.INFO,
       },
     });
 
     // Request-based Lambda authorizer — gives access to headers (Cookie)
-    const authorizer = new apigateway.RequestAuthorizer(this, 'CookieAuthorizer', {
-      handler: authorizerLambda,
-      identitySources: [
-        apigateway.IdentitySource.header('Cookie'),
-      ],
-      resultsCacheTtl: cdk.Duration.minutes(5),
-    });
+    const authorizer = new apigateway.RequestAuthorizer(
+      this,
+      "CookieAuthorizer",
+      {
+        handler: authorizerLambda,
+        identitySources: [apigateway.IdentitySource.header("Cookie")],
+        resultsCacheTtl: cdk.Duration.minutes(5),
+      },
+    );
 
     // ──────────────────────────────────────────
     // Routes: /{bucket}/{path+}
     // ──────────────────────────────────────────
     // Top-level resource: {bucket}
-    const bucketResource = api.root.addResource('{bucket}');
+    const bucketResource = api.root.addResource("{bucket}");
     // Proxy resource under it: {path+}  (catch-all for any S3 key)
-    const pathResource = bucketResource.addResource('{path+}');
+    const pathResource = bucketResource.addResource("{path+}");
 
     // GET method with authorizer + Lambda backend
-    pathResource.addMethod('GET', new apigateway.LambdaIntegration(backendLambda), {
-      authorizer,
-      authorizationType: apigateway.AuthorizationType.CUSTOM,
-      requestParameters: {
-        'method.request.path.bucket': true,
-        'method.request.path.path': true,
+    pathResource.addMethod(
+      "GET",
+      new apigateway.LambdaIntegration(backendLambda),
+      {
+        authorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+        requestParameters: {
+          "method.request.path.bucket": true,
+          "method.request.path.path": true,
+        },
       },
-    });
+    );
 
     // ──────────────────────────────────────────
     // Outputs
     // ──────────────────────────────────────────
-    new cdk.CfnOutput(this, 'ApiEndpoint', {
+    new cdk.CfnOutput(this, "ApiEndpoint", {
       value: api.url,
-      description: 'Base URL of the S3 proxy API',
+      description: "Base URL of the S3 proxy API",
     });
-    new cdk.CfnOutput(this, 'BucketName', {
+    new cdk.CfnOutput(this, "BucketName", {
       value: fileBucket.bucketName,
-      description: 'S3 bucket name',
+      description: "S3 bucket name",
     });
   }
 }
